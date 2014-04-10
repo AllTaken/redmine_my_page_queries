@@ -1,4 +1,4 @@
-redmine_my_page_queries
+Redmine "my page" queries
 =======================
 
 Add Saved Queries to "my page" in redmine
