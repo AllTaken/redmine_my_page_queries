@@ -1,0 +1,7 @@
+= Redmine "my page" queries
+
+Add Saved Queries to "my page" in redmine
+
+= Install
+
+Copy to plugin folder

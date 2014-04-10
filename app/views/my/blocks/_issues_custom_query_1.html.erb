@@ -1,0 +1,98 @@
+<%
+qrynum = "1"
+unless @sidebar_queries then
+      # User can see public queries and his own queries
+      visible = Query.scoped(:conditions => ["visibility = ? OR user_id = ?", 2, (@user.logged? ? @user.id : 0)])
+      # Project specific queries and global queries
+      projects=Project.visible.find(:all)
+      project_ids=Array.new
+      projects.each do |project|
+        project_ids+=[project[:id].to_i]
+      end
+      visible = visible.scoped(:conditions => ["project_id IS NULL OR project_id IN ( " + project_ids.join(', ') + ")"])
+      @sidebar_queries = visible.all(:select => 'id, name, project_id', :order => 'project_id DESC, name ASC')
+    end
+if @user.pref[:others]["custom_query" + qrynum ] == nil then
+  @user.pref[:others]["custom_query" + qrynum ]=Hash.new
+  @user.pref.save
+  @user.pref[:others]["custom_query" + qrynum ][:id]=-1
+  @user.pref[:others]["custom_query" + qrynum ][:limit]=10
+  @user.pref.save
+end
+if params["custom_query" + qrynum ]=="true" then
+  @user.pref[:others]["custom_query" + qrynum ][:id]=params[:query].to_i
+  @user.pref[:others]["custom_query" + qrynum ][:limit]=params[:limit].to_i
+  @user.pref.save
+end
+begin
+
+      @query = IssueQuery.find(@user.pref[:others]["custom_query" + qrynum ][:id].to_i)
+
+#@query = Query.find(@user.pref[:others]["custom_query" + qrynum ][:id].to_i)
+rescue ActiveRecord::RecordNotFound
+    @user.pref[:others]["custom_query" + qrynum ][:id]=-1
+    @user.pref.save
+    @query = nil
+end
+custom_issues = @query.nil? ? Array.new : @query.issues(:include => [:assigned_to, :tracker, :priority, :category, :fixed_version],
+                              :limit => @user.pref[:others]["custom_query" + qrynum ][:limit] )
+%>
+<% if @query.nil? then %>
+<h3>-- none -- 
+<% else %>
+  <h3>
+    <% if(@query.project_id!=nil) -%>
+      <%= Project.visible.find(@query.project_id.to_i).name + " > " %>
+    <% end -%>
+    <% if @query.project.nil? then %>
+      <%= link_to(h(@query.name), :controller => 'issues',:action => 'index', :query_id => @query.id) %>
+    <% else %>
+      <%= link_to(h(@query.name), :controller => 'issues',:project_id =>@query.project.id ,:action => 'index', :query_id => @query.id) %>
+    <% end %>
+    (<%= @query.issue_count%>)
+<% end %>
+    <a style="font-size: 80%" href="#" onclick="var ele = document.getElementById('custom_query_form1'); if(ele.style.display=='none') { ele.style.display='' } else { ele.style.display='none' }">modify</a>
+  </h3>
+<div style="display:none" id="custom_query_form1">
+<%= form_tag({:action => ""}, :id => "block-form") do %>
+<table>
+  <tr>
+    <td>
+       <label for="query">Query: </label>
+    </td>
+    <td>
+       <select name="query">
+        <option value="-1">-- none --</option>
+        <% @sidebar_queries.each do |query| -%>
+         <option value="<%= h(query.id) %>" <% if @user.pref[:others]["custom_query" + qrynum ][:id].to_i==query.id -%>selected="selected"<% end -%>><% if(query.project_id.to_i>0) -%><%= Project.visible.find(query.project_id.to_i).name + " > " %><% end -%><%= h(query.name) %></option>
+        <% end -%>
+       </select>
+    </td>
+    <td>
+       <label for="limit">Limit: </label>
+    </td>
+    <td>
+      <input type="text" size="4" maxlength="3" name="limit" value="<%= h(@user.pref[:others]["custom_query" + qrynum ][:limit]) %>" />
+    </td>
+    <td colspan="3">
+       <input type="hidden" name="custom_query<%=   qrynum %>" value="true" /><input type="submit" value="<%= l(:button_save) %>" />
+    </td>
+   </tr>
+</table>
+<% end %>
+</div>
+<% if @query.nil? then %>
+<%= render :partial => 'issues/list_simple', :locals => { :issues => custom_issues } %>
+<% else %>
+<% @issue_count_by_group = @query.issue_count_by_group %>
+<%= render :partial => 'issues/list', :locals => { :issues => custom_issues, :query => @query } %>
+<% end %>
+
+<% unless @query.nil? then %>
+  <% content_for :header_tags do %>
+    <%= auto_discovery_link_tag(:atom, 
+                            {:controller => 'issues', :action => 'index', :set_filter => 1,
+                             :query_id => @query.id, :format => 'atom', :key => User.current.rss_key},
+                            {:title => l(:label_assigned_to_me_issues)}) %>
+  <% end %>
+<% end %>
