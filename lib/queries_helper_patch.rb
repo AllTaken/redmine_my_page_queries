@@ -11,9 +11,10 @@ module QueriesHelperPatch
 
   module InstanceMethods
     def column_header_with_nilable_criteria(column)
-      column.sortable and !@sort_critera.nil? ? sort_header_tag(column.name.to_s, :caption => column.caption,
+      (column.sortable and !@sort_criteria.nil?) ? sort_header_tag(column.name.to_s, :caption => column.caption,
                                                         :default_order => column.default_order) :
                       content_tag('th', h(column.caption))
     end
   end
 end
+

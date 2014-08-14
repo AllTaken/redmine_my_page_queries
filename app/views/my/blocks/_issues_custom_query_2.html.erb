@@ -51,10 +51,10 @@ custom_issues = @query.nil? ? Array.new : @query.issues(:include => [:assigned_t
     <% end %>
     (<%= @query.issue_count%>)
 <% end %>
-    <a style="font-size: 80%" href="#" onclick="var ele = document.getElementById('custom_query_form1'); if(ele.style.display=='none') { ele.style.display='' } else { ele.style.display='none' }">modify</a>
+    <a style="font-size: 80%" href="#" onclick="var ele = document.getElementById('custom_query_form2'); if(ele.style.display=='none') { ele.style.display='' } else { ele.style.display='none' }">modify</a>
   </h3>
-<div style="display:none" id="custom_query_form1">
-<%= form_tag({:action => ""}, :id => "block-form") do %>
+<div style="display:none" id="custom_query_form2">
+<%= form_tag({:action => "page"}, :id => "block-form", :method => :get) do %>
 <table>
   <tr>
     <td>
