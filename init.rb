@@ -10,6 +10,7 @@ Redmine::Plugin.register :redmine_my_page_queries do
 
   Rails.configuration.to_prepare do
     MyController.send :include, MyControllerPatch
+    SortHelper.send :include, SortHelperPatch
     QueriesHelper.send :include, QueriesHelperPatch
   end
 end

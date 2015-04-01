@@ -2,15 +2,16 @@
 qrynum = "3"
 unless @sidebar_queries then
       # User can see public queries and his own queries
-      visible = Query.scoped(:conditions => ["visibility = ? OR user_id = ?", 2, (@user.logged? ? @user.id : 0)])
+      visible = Query.where("visibility = ? OR user_id = ?", 2, (@user.logged? ? @user.id : 0))
       # Project specific queries and global queries
-      projects=Project.visible.find(:all)
+      projects=Project.visible.all
       project_ids=Array.new
       projects.each do |project|
         project_ids+=[project[:id].to_i]
       end
-      visible = visible.scoped(:conditions => ["project_id IS NULL OR project_id IN ( " + project_ids.join(', ') + ")"])
-      @sidebar_queries = visible.all(:select => 'id, name, project_id', :order => 'project_id DESC, name ASC')
+      visible = visible.where("project_id IS NULL OR project_id IN (" + project_ids.join(', ') + ")")
+      @sidebar_queries = visible.select('id, name, project_id').order('project_id DESC, name ASC')
+#      @sidebar_queries = visible.select('id, name, project_id', :order => 'project_id DESC, name ASC')
     end
 if @user.pref[:others]["custom_query" + qrynum ] == nil then
   @user.pref[:others]["custom_query" + qrynum ]=Hash.new
@@ -51,9 +52,9 @@ custom_issues = @query.nil? ? Array.new : @query.issues(:include => [:assigned_t
     <% end %>
     (<%= @query.issue_count%>)
 <% end %>
-    <a style="font-size: 80%" href="#" onclick="var ele = document.getElementById('custom_query_form3'); if(ele.style.display=='none') { ele.style.display='' } else { ele.style.display='none' }">modify</a>
+    <a style="font-size: 80%" href="#" onclick="var ele = document.getElementById('custom_query_form<%= qrynum %>'); if(ele.style.display=='none') { ele.style.display='' } else { ele.style.display='none' }">modify</a>
   </h3>
-<div style="display:none" id="custom_query_form3">
+<div style="display:none" id="custom_query_form<%= qrynum %>">
 <%= form_tag({:action => "page"}, :id => "block-form", :method => :get) do %>
 <table>
   <tr>
@@ -63,7 +64,7 @@ custom_issues = @query.nil? ? Array.new : @query.issues(:include => [:assigned_t
     <td>
        <select name="query">
         <option value="-1">-- none --</option>
-        <% @sidebar_queries.each do |query| -%>
+        <% @sidebar_queries.each do |query| %>
          <option value="<%= h(query.id) %>" <% if @user.pref[:others]["custom_query" + qrynum ][:id].to_i==query.id -%>selected="selected"<% end -%>><% if(query.project_id.to_i>0) -%><%= Project.visible.find(query.project_id.to_i).name + " > " %><% end -%><%= h(query.name) %></option>
         <% end -%>
        </select>
@@ -88,11 +89,11 @@ custom_issues = @query.nil? ? Array.new : @query.issues(:include => [:assigned_t
 <%= render :partial => 'issues/list', :locals => { :issues => custom_issues, :query => @query } %>
 <% end %>
 
-<% unless @query.nil? then %>
-  <% content_for :header_tags do %>
-    <%= auto_discovery_link_tag(:atom, 
+<!-- unless @query.nil? then %>
+  < content_for :header_tags do %>
+    <= auto_discovery_link_tag(:atom, 
                             {:controller => 'issues', :action => 'index', :set_filter => 1,
                              :query_id => @query.id, :format => 'atom', :key => User.current.rss_key},
                             {:title => l(:label_assigned_to_me_issues)}) %>
-  <% end %>
-<% end %>
+  < end %>
+< end -->

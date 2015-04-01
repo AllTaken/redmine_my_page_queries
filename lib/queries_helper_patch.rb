@@ -1,20 +1,21 @@
 module QueriesHelperPatch
-  def self.included(base) # :nodoc:
-    base.send(:include, InstanceMethods)
+	def self.included(base) # :nodoc:
+		base.send(:include, InstanceMethods)
 
-    base.class_eval do
-      unloadable # Send unloadable so it will not be unloaded in development
+		base.class_eval do
+			unloadable
 
-      alias_method_chain :column_header, :nilable_criteria
-    end
-  end
+			alias_method_chain :column_header, :nilable_criteria
+		end
+	end
 
-  module InstanceMethods
-    def column_header_with_nilable_criteria(column)
-      (column.sortable and !@sort_criteria.nil?) ? sort_header_tag(column.name.to_s, :caption => column.caption,
-                                                        :default_order => column.default_order) :
-                      content_tag('th', h(column.caption))
-    end
-  end
+	module InstanceMethods
+		def column_header_with_nilable_criteria(column)
+			if sort_criteria.nil?
+				content_tag('th', h(column.caption))        
+			else
+				column_header_without_nilable_criteria(column)
+			end
+		end
+	end
 end
-
