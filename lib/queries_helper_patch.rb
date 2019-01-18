@@ -11,11 +11,11 @@ module QueriesHelperPatch
 	end
 
 	module InstanceMethods
-		def column_header_with_nilable_criteria(column)
-			if sort_criteria.nil?
+		def column_header_with_nilable_criteria(query, column, options={})
+			if query.sort_criteria.nil?
 				content_tag('th', h(column.caption))
 			else
-				column_header_without_nilable_criteria(column)
+				column_header_without_nilable_criteria(query, column, options={})
 			end
 		end
 	end
