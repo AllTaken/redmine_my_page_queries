@@ -5,7 +5,8 @@ module SortHelperPatch
 		base.class_eval do
 			unloadable # Send unloadable so it will not be unloaded in development
 
-			alias_method_chain :sort_css_classes, :nilable_criteria
+			alias_method :sort_css_classes_without_nilable_criteria, :sort_css_classes
+			alias_method :sort_css_classes, :sort_css_classes_with_nilable_criteria
 		end
 	end
 

@@ -5,16 +5,17 @@ module QueriesHelperPatch
 		base.class_eval do
 			unloadable
 
-			alias_method_chain :column_header, :nilable_criteria
+			alias_method :column_header_without_nilable_criteria, :column_header
+			alias_method :column_header, :column_header_with_nilable_criteria
 		end
 	end
 
 	module InstanceMethods
-		def column_header_with_nilable_criteria(column)
-			if sort_criteria.nil?
-				content_tag('th', h(column.caption))        
+		def column_header_with_nilable_criteria(query, column, options={})
+			if query.sort_criteria.nil?
+				content_tag('th', h(column.caption))
 			else
-				column_header_without_nilable_criteria(column)
+				column_header_without_nilable_criteria(query, column, options={})
 			end
 		end
 	end
